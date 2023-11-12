@@ -2,13 +2,10 @@ defmodule DatacasterTest do
   use ExUnit.Case
   doctest Datacaster
 
+  import DatacasterTestHelper
+
   use Datacaster
-
-  alias Datacaster.{Error, Success, Absent}
-
-  def call_caster(caster, val, context) do
-    caster.caster.(val, context)
-  end
+  alias Datacaster.{Error, Success}
 
   describe "#cast" do
     test "creates caster with lambda" do
@@ -76,72 +73,6 @@ defmodule DatacasterTest do
       end
 
       assert call_caster(caster, 3, 2) == {Success.new(3), 2}
-    end
-  end
-
-  describe "pick" do
-    test "it works with lists and integers" do
-      caster = Datacaster.schema do
-        pick([1, 2, 3])
-      end
-  
-      assert call_caster(caster, ["0", "1", "2", "3"], "context") == {Success.new(["1", "2", "3"]), "context"}
-    end
-
-    test "it works with tuples and integers" do
-      caster = Datacaster.schema do
-        pick({0, 0})
-      end
-  
-      assert call_caster(caster, [["0", "1"], "2", "3"], "context") == {Success.new("0"), "context"}
-    end
-
-    test "it works with maps and atoms" do
-      caster = Datacaster.schema do
-        pick(:foo)
-      end
-  
-      assert call_caster(caster, %{foo: "bar"}, "context") == {Success.new("bar"), "context"}
-    end
-
-    test "it works with maps and strings" do
-      caster = Datacaster.schema do
-        pick("foo")
-      end
-  
-      assert call_caster(caster, %{"foo" => "bar"}, "context") == {Success.new("bar"), "context"}
-    end
-
-    test "it works with nested maps with tuples" do
-      caster = Datacaster.schema do
-        pick({"foo", :bar})
-      end
-  
-      assert call_caster(caster, %{"foo" => %{bar: "baz"}}, "context") == {Success.new("baz"), "context"}
-    end
-
-    test "it works with nested maps with tuples with lists" do
-      caster = Datacaster.schema do
-        pick({"foo", 0})
-      end
-  
-      assert call_caster(caster, %{"foo" => ["bar", "baz"]}, "context") == {Success.new("bar"), "context"}
-    end
-
-    test "it works with nested maps with lists" do
-      caster = Datacaster.schema do
-        pick(["foo", :bar])
-      end
-  
-      assert call_caster(caster, %{"foo" => %{bar: "baz"}}, "context") == {Success.new([%{bar: "baz"}, Absent]), "context"}
-    end
-
-    test "it works with nested maps with lists with tuples" do
-      caster = Datacaster.schema do
-        pick(["foo", 0])
-      end
-  
-      assert call_caster(caster, %{"foo" => ["bar", "baz"]}, "context") == {Success.new("bar", Absent]), "context"}
     end
   end
 end

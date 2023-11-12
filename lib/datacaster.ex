@@ -21,22 +21,6 @@ defmodule Datacaster do
 
   defmodule Absent do
   end
-
-  defmodule Success do
-    defstruct value: nil
-
-    def new(value) do
-      %__MODULE__{value: value}
-    end
-  end
-
-  defmodule Error do
-    defstruct error: nil
-
-    def new(error) do
-      %__MODULE__{error: error}
-    end
-  end
 end
 
 # !@#$%^&*()_+{}|:"<>?~`-=[]\;',./

@@ -1,81 +1,91 @@
 defmodule Datacaster.Picker do
   alias Datacaster.{Error, Success, Absent}
 
-  def build(opts) do
+  def build(keys) do
     %Datacaster.Node{
-      caster: build_function(opts),
+      caster: build_function(keys),
       kind: :picker
     }
   end
 
-  defp build_function(opts) when is_list(opts) do
+  defp build_function(key) do
     fn (value, context) ->
-      result = Enum.reduce(opts, [], fn (opt, acc) ->
-        new_value = flat_visitor(opt).(value)
-        acc ++ [new_value]
-      end)
-
-      {Success.new(result), context}
+      {
+        Success.new(visitor(key).(value)),
+        context
+      }
     end
   end
 
-  defp build_function(opts) when is_tuple(opts) do
-    opts = Tuple.to_list(opts)
+  defp visitor(keys) when is_tuple(keys) do
+    keys = Tuple.to_list(keys)
 
-    fn (value, context) ->
-      result = Enum.reduce(opts, value, fn (opt, acc) ->
-        cond do
-          acc == Absent ->
-            acc
-          true ->
-            flat_visitor(opt).(acc)
-        end
-      end)
-
-      {Success.new(result), context}
-    end
-  end
-
-  defp build_function(opt) do
-    fn (value, context) ->
-      case flat_visitor(opt).(value) do
-        %Error{} = error ->
-          {error, context}
-        value ->
-          {Success.new(value), context}
-      end
-    end
-  end
-
-  defp flat_visitor(opt) when is_integer(opt) do
-    fn (value) ->
-      cond do
-        is_map(value) -> 
-          Map.get(value, opt, Absent)
-        is_list(value) ->
-          Enum.at(value, opt, Absent)
-        is_tuple(value) and opt >= 0 ->
-          if opt < tuple_size(value) do
-            elem(value, opt)
-          else
-            Absent
+    fn
+      value = %Error{} ->
+        value
+      value ->
+        Enum.reduce(keys, value, fn (key, acc) ->
+          case acc do
+            val = Absent ->
+              val
+            _ ->
+              visitor(key).(acc)
           end
-        true ->
-          Error.new("is not a collection")
-      end
+        end)
     end
   end
 
-  defp flat_visitor(opt) do
-    fn (value) ->
-      cond do
-        is_map(value) -> 
-          Map.get(value, opt, Absent)
-        Keyword.keyword?(value) ->
-          Keyword.get(value, opt, Absent)
-        true ->
-          Error.new("is not a hash")
-      end
+  defp visitor(keys) when is_list(keys) do
+    fn
+      value = %Error{} ->
+        value
+      value ->
+        Enum.reduce(keys, [], fn (key, acc) ->
+          case visitor(key).(value) do
+            val = %Error{} ->
+              val
+            val ->
+              acc ++ [val]
+          end
+        end)
+    end
+  end
+
+  defp visitor(key) when is_integer(key) do
+    fn 
+      value = %Error{} ->
+        value
+      value ->
+        cond do
+          is_map(value) -> 
+            Map.get(value, key, Absent)
+          is_list(value) ->
+            Enum.at(value, key, Absent)
+          is_tuple(value) and key >= 0 ->
+            if key < tuple_size(value) do
+              elem(value, key)
+            else
+              Absent
+            end
+          true ->
+            Error.new("is not a collection")
+        end
+    end
+  end
+
+  defp visitor(key) do
+    fn
+      value = %Error{} ->
+        value
+      value ->
+        cond do
+          is_map(value) -> 
+            Map.get(value, key, Absent)
+          Keyword.keyword?(value) ->
+            Keyword.get(value, key, Absent)
+          true ->
+            Error.new("is not a hash")
+        end
     end
   end
 end
