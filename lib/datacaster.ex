@@ -8,30 +8,35 @@ defmodule Datacaster do
   defmacro schema(do: block) do
     quote do
       require Datacaster.Predefined
+      import Kernel, except: [>: 2, <>: 2]
       import Datacaster.Predefined
 
       unquote(block)
     end
   end
 
-  defmodule Caster do
+  defmodule Node do
     defstruct caster: nil, kind: nil
   end
 
-  defmodule Success do
-    defstruct value: nil, context: nil
+  defmodule Absent do
+  end
 
-    def new(value, context) do
-      %__MODULE__{value: value, context: context}
+  defmodule Success do
+    defstruct value: nil
+
+    def new(value) do
+      %__MODULE__{value: value}
     end
   end
 
   defmodule Error do
-    defstruct error: nil, context: nil
+    defstruct error: nil
 
-    def new(error, context) do
-      %__MODULE__{error: error, context: context}
+    def new(error) do
+      %__MODULE__{error: error}
     end
   end
 end
 
+# !@#$%^&*()_+{}|:"<>?~`-=[]\;',./

@@ -1,74 +1,60 @@
 defmodule Datacaster.Predefined do
-  alias Datacaster.{Success, Error}
+  alias Datacaster.{
+    Caster,
+    Checker,
+    Node,
+    Success,
+    Error,
+    Picker
+  }
 
   defmacro cast(func) do
-    build_caster(func)
-  end
-
-  defp build_caster(func) do
-    quote do
-      %Datacaster.Caster{
-        caster: unquote(build_function(func)),
-        kind: :caster
-      }
-    end
+    Caster.build(func)
   end
 
   defmacro check(error_msg \\ "invalid", func) do
-    build_checker(error_msg, func)
+    Checker.build(error_msg, func)
   end
 
-  defp build_checker(error_msg, func) do
-    func = build_function(func)
+  def pick(opts) do
+    Picker.build(opts)
+  end
 
-    check_func = quote bind_quoted: [func: func, error_msg: error_msg] do
-      fn (input_value, context) ->
-        {value, context} = func.(input_value, context)
+  def (%Node{} = left) > (%Node{} = right) do
+    and_function = fn (value, context) ->
+      {result, context} = left.caster.(value, context)
 
-        if value do
-          Success.new(input_value, context)
-        else
-          Error.new(error_msg, context)
-        end
+      case result do
+        %Success{value: value} ->
+          right.caster.(value, context)
+        %Error{} ->
+          {result, context}
       end
     end
 
-    quote do
-      %Datacaster.Caster{
-        caster: unquote(check_func),
-        kind: :checker
-      }
-    end
+    %Node{
+      caster: and_function,
+      kind: :and
+    }
   end
+  defdelegate left > right, to: Kernel
 
-  defp build_function({op = :fn, fn_meta, fn_args}) do
-    context_var = {:context, [], nil}
+  def (%Node{} = left) <> (%Node{} = right) do
+    or_function = fn (value, context) ->
+      {result, context} = left.caster.(value, context)
 
-    fn_args = Enum.map(fn_args, fn ({:->, meta, [args, body]}) ->
-      {
-        :->,
-        meta,
-        [
-          args ++ [context_var],
-          quote do
-            result = unquote(body)
-            {result, unquote(context_var)}
-          end
-        ]
-      }
-    end)
-
-    {op, fn_meta, fn_args}
-  end
-
-  defp build_function({_op = :&, _meta, _args} = func) do
-    quote bind_quoted: [func: func] do
-      case :erlang.fun_info(func)[:arity] do
-        1 ->
-          fn (value, context) -> {func.(value), context} end
-        2 ->
-          fn (value, context) -> {func.(value, context), context} end
+      case result do
+        %Error{}->
+          right.caster.(value, context)
+         %Success{} ->
+          {result, context}
       end
     end
+
+    %Node{
+      caster: or_function,
+      kind: :or
+    }
   end
+  defdelegate left <> right, to: Kernel
 end
