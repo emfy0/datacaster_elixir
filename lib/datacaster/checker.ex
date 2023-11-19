@@ -8,21 +8,18 @@ defmodule Datacaster.Checker do
 
     check_func = quote bind_quoted: [func: func, error_msg: error_msg] do
       fn (input_value, context) ->
-        {value, context} = func.(input_value, context)
+        {value, res_context} = func.(input_value, context)
 
         if value do
           {Success.new(input_value), context}
         else
-          {Error.new(error_msg), context}
+          {Error.new(error_msg, res_context), context}
         end
       end
     end
 
     quote do
-      %Datacaster.Node{
-        caster: unquote(check_func),
-        kind: :checker
-      }
+      unquote(check_func)
     end
   end
 end

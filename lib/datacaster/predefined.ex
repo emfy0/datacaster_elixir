@@ -2,10 +2,10 @@ defmodule Datacaster.Predefined do
   alias Datacaster.{
     Caster,
     Checker,
-    Node,
     Success,
     Error,
-    Picker
+    Picker,
+    HashSchema
   }
 
   defmacro cast(func) do
@@ -20,41 +20,58 @@ defmodule Datacaster.Predefined do
     Picker.build(opts)
   end
 
-  def (%Node{} = left) > (%Node{} = right) do
-    and_function = fn (value, context) ->
-      {result, context} = left.caster.(value, context)
+  def hash_schema(opts) do
+    HashSchema.build(opts)
+  end
+
+  def left > right when is_function(left) and is_function(right) do
+    fn (value, context) ->
+      {result, context} = left.(value, context)
 
       case result do
         %Success{value: value} ->
-          right.caster.(value, context)
+          right.(value, context)
         %Error{} ->
           {result, context}
       end
     end
-
-    %Node{
-      caster: and_function,
-      kind: :and
-    }
   end
   defdelegate left > right, to: Kernel
 
-  def (%Node{} = left) <> (%Node{} = right) do
-    or_function = fn (value, context) ->
-      {result, context} = left.caster.(value, context)
+  def left <> right when is_function(left) and is_function(right) do
+    fn (value, context) ->
+      {result, context} = left.(value, context)
 
       case result do
         %Error{}->
-          right.caster.(value, context)
-         %Success{} ->
+          right.(value, context)
+        %Success{} ->
           {result, context}
       end
     end
-
-    %Node{
-      caster: or_function,
-      kind: :or
-    }
   end
   defdelegate left <> right, to: Kernel
+
+  def left * right when is_function(left) and is_function(right) do
+    fn (value, context) ->
+      {left_result, context} = left.(value, context)
+
+      case left_result do
+        %Success{value: value} ->
+          right.(value, context)
+        %Error{} ->
+          {right_result, context} = right.(value, context)
+
+          case right_result do
+            %Success{} ->
+              {left_result, context}
+            %Error{} ->
+              {
+                Error.merge(left_result, right_result), context
+              }
+          end
+      end
+    end
+  end
+  defdelegate left * right, to: Kernel
 end

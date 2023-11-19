@@ -44,7 +44,7 @@ defmodule DatacasterTest do
       end
 
       assert call_caster(caster, 2, 2) == {%Success{value: 2}, 2}
-      assert call_caster(caster, 3, 3) == {%Error{error: "error"}, 3}
+      assert call_caster(caster, 3, 3) == {%Error{error: "error", context: 3}, 3}
     end
   end
 

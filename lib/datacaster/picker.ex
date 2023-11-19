@@ -2,10 +2,7 @@ defmodule Datacaster.Picker do
   alias Datacaster.{Error, Success, Absent}
 
   def build(keys) do
-    %Datacaster.Node{
-      caster: build_function(keys),
-      kind: :picker
-    }
+    build_function(keys)
   end
 
   defp build_function(key) do

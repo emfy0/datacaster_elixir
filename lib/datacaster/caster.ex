@@ -8,13 +8,13 @@ defmodule Datacaster.Caster do
 
     caster_func = quote bind_quoted: [func: func], generated: true do
       fn (input_value, context) ->
-        {value, context} = func.(input_value, context)
+        {value, res_context} = func.(input_value, context)
 
         case value do
           %Success{} ->
             {value, context}
           %Error{} ->
-            {value, context}
+            {%Error{value | context: res_context}, context}
           _ ->
             raise "invalid caster return value, expected Success or Error, got: #{inspect(value)}"
         end
@@ -22,10 +22,7 @@ defmodule Datacaster.Caster do
     end
 
     quote do
-      %Datacaster.Node{
-        caster: unquote(caster_func),
-        kind: :caster
-      }
+      unquote(caster_func)
     end
   end
 end

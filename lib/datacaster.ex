@@ -8,15 +8,11 @@ defmodule Datacaster do
   defmacro schema(do: block) do
     quote do
       require Datacaster.Predefined
-      import Kernel, except: [>: 2, <>: 2]
+      import Kernel, except: [>: 2, <>: 2, *: 2]
       import Datacaster.Predefined
 
       unquote(block)
     end
-  end
-
-  defmodule Node do
-    defstruct caster: nil, kind: nil
   end
 
   defmodule Absent do
