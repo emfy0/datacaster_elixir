@@ -70,6 +70,22 @@ defmodule Datacaster.Picker do
     end
   end
 
+  defp visitor(key) when is_atom(key) do
+    fn
+      value = %Error{} ->
+        value
+      value ->
+        cond do
+          is_map(value) -> 
+            Map.get(value, key, Map.get(value, Atom.to_string(key), Absent))
+          Keyword.keyword?(value) ->
+            Keyword.get(value, key, Keyword.get(value, Atom.to_string(key), Absent))
+          true ->
+            Error.new("is not a hash")
+        end
+    end
+  end
+
   defp visitor(key) do
     fn
       value = %Error{} ->

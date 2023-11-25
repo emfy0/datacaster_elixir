@@ -24,7 +24,13 @@ defmodule Datacaster.HashSchema do
     fn (value, context) ->
       results = Enum.map(modified_casters, fn {key_to_check, caster} ->
         {result, _} = caster.(value, context)
-        [key] = key_to_check
+        key =
+          case key_to_check do
+            [key] when is_bitstring(key) ->
+              String.to_atom(key)
+            [key] ->
+              key
+          end
         {key, result}
       end)
 
@@ -65,5 +71,6 @@ defmodule Datacaster.HashSchema do
   end
 
   def key_from_pick(key) when is_list(key), do: key
+  def key_from_pick(key) when is_atom(key), do: [Atom.to_string(key)]
   def key_from_pick(key), do: [key]
 end

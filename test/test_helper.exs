@@ -1,8 +1,8 @@
 ExUnit.start()
 
 defmodule DatacasterTestHelper do
-  def call_caster(caster, val, context) do
-    caster.(val, context)
+  def checked_context(val) do
+    %{__datacaster__: %Datacaster.Context{checked_schema: val}}
   end
 end
 

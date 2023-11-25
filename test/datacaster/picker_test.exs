@@ -1,10 +1,8 @@
 defmodule Datacaster.PickerTest do
   use ExUnit.Case
 
-  import DatacasterTestHelper
-
   use Datacaster
-  alias Datacaster.{Error, Success, Absent}
+  alias Datacaster.{Error, Success, Absent, Executor}
 
   describe "pick" do
     test "it works with lists and integers" do
@@ -12,7 +10,7 @@ defmodule Datacaster.PickerTest do
         pick([1, 2, 3])
       end
   
-      assert call_caster(caster, ["0", "1", "2", "3"], "context") == {Success.new(["1", "2", "3"]), "context"}
+      assert Executor.run(caster, ["0", "1", "2", "3"], %{}) == Success.new(["1", "2", "3"])
     end
 
     test "it works with tuples and integers" do
@@ -20,7 +18,7 @@ defmodule Datacaster.PickerTest do
         pick({0, 0})
       end
   
-      assert call_caster(caster, [["0", "1"], "2", "3"], "context") == {Success.new("0"), "context"}
+      assert Executor.run(caster, [["0", "1"], "2", "3"], %{}) == Success.new("0")
     end
 
     test "it works with maps and atoms" do
@@ -28,7 +26,7 @@ defmodule Datacaster.PickerTest do
         pick(:foo)
       end
   
-      assert call_caster(caster, %{foo: "bar"}, "context") == {Success.new("bar"), "context"}
+      assert Executor.run(caster, %{foo: "bar"}, %{}) == Success.new("bar")
     end
 
     test "it works with maps and strings" do
@@ -36,7 +34,7 @@ defmodule Datacaster.PickerTest do
         pick("foo")
       end
   
-      assert call_caster(caster, %{"foo" => "bar"}, "context") == {Success.new("bar"), "context"}
+      assert Executor.run(caster, %{"foo" => "bar"}, %{}) == Success.new("bar")
     end
 
     test "it works with nested maps with tuples" do
@@ -44,7 +42,7 @@ defmodule Datacaster.PickerTest do
         pick({"foo", :bar})
       end
   
-      assert call_caster(caster, %{"foo" => %{bar: "baz"}}, "context") == {Success.new("baz"), "context"}
+      assert Executor.run(caster, %{"foo" => %{bar: "baz"}}, %{}) == Success.new("baz")
     end
 
     test "it works with nested maps with tuples with lists" do
@@ -52,7 +50,7 @@ defmodule Datacaster.PickerTest do
         pick({"foo", 0})
       end
   
-      assert call_caster(caster, %{"foo" => ["bar", "baz"]}, "context") == {Success.new("bar"), "context"}
+      assert Executor.run(caster, %{"foo" => ["bar", "baz"]}, %{}) == Success.new("bar")
     end
 
     test "it works with nested maps with lists" do
@@ -60,31 +58,29 @@ defmodule Datacaster.PickerTest do
         pick(["foo", :bar])
       end
   
-      assert call_caster(caster, %{"foo" => %{bar: "baz"}}, "context") == {Success.new([%{bar: "baz"}, Absent]), "context"}
+      assert Executor.run(caster, %{"foo" => %{bar: "baz"}}, %{}) == Success.new([%{bar: "baz"}, Absent])
+      assert Executor.run(caster, %{"foo" => %{bar: "baz"}}, %{}) == Success.new([%{bar: "baz"}, Absent])
     end
 
     test "it works with nested maps with lists with tuples" do
       caster = Datacaster.schema do
         pick(["foo", 0])
       end
-  
-      assert call_caster(caster, %{"foo" => ["bar", "baz"]}, "context") == {Success.new([["bar", "baz"], Absent]), "context"}
+      assert Executor.run(caster, %{"foo" => ["bar", "baz"]}, %{}) == Success.new([["bar", "baz"], Absent])
     end
 
     test "it returns error on invalid input" do
       caster = Datacaster.schema do
         pick(:foo)
       end
-  
-      assert call_caster(caster, ["bar", "baz"], "context") == {Error.new("is not a hash"), "context"}
+      assert Executor.run(caster, ["bar", "baz"], %{}) == Error.new("is not a hash")
     end
 
     test "it returns error on invalid input with nested maps" do
       caster = Datacaster.schema do
         pick({"foo", :bar})
       end
-  
-      assert call_caster(caster, ["foo", "bar"], "context") == {Error.new("is not a hash"), "context"}
+      assert Executor.run(caster, ["foo", "bar"], %{}) == Error.new("is not a hash")
     end
 
     test "it works with nested structures" do
@@ -92,17 +88,15 @@ defmodule Datacaster.PickerTest do
         pick(["foo", {0, :bar}])
       end
 
-      assert(call_caster(caster,
+      assert(Executor.run(caster,
         %{
           "foo" => [
             %{bar: "baz"}, %{bar: "qux"}
           ]
-        }, "context") == {
-          Success.new([
+        }, %{}) == Success.new([
             [%{bar: "baz"}, %{bar: "qux"}],
             Absent
-          ]), "context"
-        }
+        ])
       )
     end
 
@@ -111,16 +105,28 @@ defmodule Datacaster.PickerTest do
         pick({"foo", [:baz, :bar]})
       end
 
-      assert(call_caster(caster,
+      assert(Executor.run(caster,
         %{
           "foo" => %{
             baz: "baz", bar: "bar"
           }
-        }, "context") == {
-          Success.new([
+        }, %{}) == Success.new([
             "baz", "bar"
-          ]), "context"
-        }
+        ])
+      )
+    end
+
+    test "it picks strings with atoms" do
+      caster = Datacaster.schema do
+        pick({:foo, :bar})
+      end
+
+      assert(Executor.run(caster,
+        %{
+          "foo" => %{
+            "bar" => "bar"
+          }
+        }, %{}) == Success.new("bar")
       )
     end
   end

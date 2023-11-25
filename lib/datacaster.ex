@@ -11,7 +11,7 @@ defmodule Datacaster do
       import Kernel, except: [>: 2, <>: 2, *: 2]
       import Datacaster.Predefined
 
-      unquote(block)
+      schema(unquote(block))
     end
   end
 

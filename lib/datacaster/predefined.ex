@@ -1,28 +1,13 @@
 defmodule Datacaster.Predefined do
   alias Datacaster.{
-    Caster,
-    Checker,
     Success,
     Error,
+    Caster,
+    Checker,
     Picker,
-    HashSchema
+    HashSchema,
+    Terminator
   }
-
-  defmacro cast(func) do
-    Caster.build(func)
-  end
-
-  defmacro check(error_msg \\ "invalid", func) do
-    Checker.build(error_msg, func)
-  end
-
-  def pick(opts) do
-    Picker.build(opts)
-  end
-
-  def hash_schema(opts) do
-    HashSchema.build(opts)
-  end
 
   def left > right when is_function(left) and is_function(right) do
     fn (value, context) ->
@@ -74,4 +59,24 @@ defmodule Datacaster.Predefined do
     end
   end
   defdelegate left * right, to: Kernel
+
+  defmacro cast(func) do
+    Caster.build(func)
+  end
+
+  defmacro check(error_msg \\ "invalid", func) do
+    Checker.build(error_msg, func)
+  end
+
+  def pick(opts) do
+    Picker.build(opts)
+  end
+
+  def hash_schema(opts) do
+    HashSchema.build(opts)
+  end
+
+  def schema(caster) do
+    Terminator.build(caster)
+  end
 end
