@@ -93,4 +93,18 @@ defmodule DatacasterTest do
       assert call_caster(caster, 3, build_context(%{a: 2})) == {Error.new("invalid", build_context(%{a: 2, b: 3})), build_context(%{a: 2})}
     end
   end
+
+  describe "#hash" do
+    test "it works with hash" do
+      caster = Datacaster.schema(do: hash())
+
+      assert call_caster(caster, %{foo: :bar}, %{bar: :baz}) == {Success.new(%{foo: :bar}), build_context(%{bar: :baz})}
+    end
+
+    test "it returns error on non-hash" do
+      caster = Datacaster.schema(do: hash())
+
+      assert call_caster(caster, 1, %{bar: :baz}) == {Error.new("should be a hash", build_context(%{bar: :baz})), build_context(%{bar: :baz})}
+    end
+  end
 end

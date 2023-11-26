@@ -18,7 +18,7 @@ defmodule Datacaster.HashSchemaTest do
       )
     end
 
-    assert Executor.run(caster, %{foo: :foo, bar: :bar}) == Success.new(%{foo: :foo, bar: :bar})
+    assert Executor.run(caster, %{foo: :foo, bar: :bar}) == Success.new(%{"foo" => :foo, "bar" => :bar})
   end
 
   test "it works with nested structures" do
@@ -32,7 +32,7 @@ defmodule Datacaster.HashSchemaTest do
       )
     end
 
-    assert Executor.run(caster, %{foo: :foo, bar: :bar, baz: %{qux: :qux}}) == Success.new(%{foo: :foo, bar: :bar, baz: %{qux: :qux}})
+    assert Executor.run(caster, %{foo: :foo, bar: :bar, baz: %{qux: :qux}}) == Success.new(%{"foo" => :foo, "bar" => :bar, "baz" => %{"qux" => :qux}})
   end
 
   test "it returns error" do
@@ -48,9 +48,9 @@ defmodule Datacaster.HashSchemaTest do
 
     assert Executor.run(caster, %{foo: :foo, bar: :bar, baz: %{qux: :asd}}) == %Error.Map{
       errors: %{
-        baz: %Error.Map{
+        "baz" => %Error.Map{
           errors: %{
-            qux: %Error{
+            "qux" => %Error{
               error: "invalid",
               context: checked_context([])
             }
@@ -73,13 +73,13 @@ defmodule Datacaster.HashSchemaTest do
 
     assert Executor.run(caster, %{foo: :asd, bar: :bar, baz: %{qux: :asd}}) == %Error.Map{
         errors: %{
-          foo: %Error{
+          "foo" => %Error{
             error: "invalid",
             context: checked_context([])
           },
-          baz: %Error.Map{
+          "baz" => %Error.Map{
             errors: %{
-              qux: %Error{
+              "qux" => %Error{
                 error: "invalid",
                 context: checked_context([])
               }
@@ -101,6 +101,6 @@ defmodule Datacaster.HashSchemaTest do
     end
 
     assert Executor.run(caster, %{"foo" => :foo, "bar" => :bar, "baz" => %{"qux" => :qux}}) ==
-      Success.new(%{foo: :foo, bar: :bar, baz: %{qux: :qux}})
+      Success.new(%{"foo" => :foo, "bar" => :bar, "baz" => %{"qux" => :qux}})
   end
 end

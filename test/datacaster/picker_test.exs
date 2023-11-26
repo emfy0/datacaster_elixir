@@ -58,8 +58,8 @@ defmodule Datacaster.PickerTest do
         pick(["foo", :bar])
       end
   
-      assert Executor.run(caster, %{"foo" => %{bar: "baz"}}, %{}) == Success.new([%{bar: "baz"}, Absent])
-      assert Executor.run(caster, %{"foo" => %{bar: "baz"}}, %{}) == Success.new([%{bar: "baz"}, Absent])
+      assert Executor.run(caster, %{"foo" => %{bar: "baz"}}, %{}) == Success.new([%{"bar" => "baz"}, Absent])
+      assert Executor.run(caster, %{"foo" => %{bar: "baz"}}, %{}) == Success.new([%{"bar" => "baz"}, Absent])
     end
 
     test "it works with nested maps with lists with tuples" do

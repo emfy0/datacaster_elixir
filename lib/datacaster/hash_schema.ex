@@ -24,14 +24,7 @@ defmodule Datacaster.HashSchema do
     fn (value, context) ->
       results = Enum.map(modified_casters, fn {key_to_check, caster} ->
         {result, _} = caster.(value, context)
-        key =
-          case key_to_check do
-            [key] when is_bitstring(key) ->
-              String.to_atom(key)
-            [key] ->
-              key
-          end
-        {key, result}
+        {key_to_check, result}
       end)
 
       failures = Enum.filter(results, fn {_key, result} ->
@@ -55,7 +48,10 @@ defmodule Datacaster.HashSchema do
 
         keys_checked = results |> Enum.map(fn {key, _} -> key end)
 
-        {Success.new(result), Context.check_key(context, keys_checked)}
+        {
+          Map.merge(value, result) |> Success.new,
+          Context.check_key(context, keys_checked)
+        }
       else
         result = Enum.reduce(failures, %Error.Map{}, fn {key, result}, acc ->
           Error.Map.add_key(acc, key, result)
@@ -67,10 +63,10 @@ defmodule Datacaster.HashSchema do
   end
 
   def key_from_pick(key) when is_tuple(key) do
-    [elem(key, 0)]
+    elem(key, 0)
   end
 
-  def key_from_pick(key) when is_list(key), do: key
-  def key_from_pick(key) when is_atom(key), do: [Atom.to_string(key)]
-  def key_from_pick(key), do: [key]
+  def key_from_pick(key) when is_list(key), do: hd(key)
+  def key_from_pick(key) when is_atom(key), do: Atom.to_string(key)
+  def key_from_pick(key), do: key
 end
