@@ -5,9 +5,13 @@ defmodule Datacaster.Predefined do
     Caster,
     Checker,
     Picker,
-    HashSchema,
+    ArraySchema,
+    HashCasters.HashSchema,
+    HashCasters.HashMapper,
     Terminator.Raiser,
     Terminator.Sweeper,
+    IfClause,
+    SwithClause
   }
 
   def schema(caster) do
@@ -25,7 +29,7 @@ defmodule Datacaster.Predefined do
       case result do
         %Success{value: value} ->
           right.(value, context)
-        %Error{} ->
+        _ ->
           {result, context}
       end
     end
@@ -37,10 +41,10 @@ defmodule Datacaster.Predefined do
       {result, context} = left.(value, context)
 
       case result do
-        %Error{}->
-          right.(value, context)
         %Success{} ->
           {result, context}
+        _ ->
+          right.(value, context)
       end
     end
   end
@@ -53,13 +57,13 @@ defmodule Datacaster.Predefined do
       case left_result do
         %Success{value: value} ->
           right.(value, context)
-        %Error{} ->
+        _ ->
           {right_result, context} = right.(value, context)
 
           case right_result do
             %Success{} ->
               {left_result, context}
-            %Error{} ->
+            _ ->
               {
                 Error.merge(left_result, right_result), context
               }
@@ -88,7 +92,31 @@ defmodule Datacaster.Predefined do
     Picker.build(opts)
   end
 
+  def pass do
+    fn (value, context) -> {value, context} end
+  end
+
+  def compare(value) do
+    check("should be equal to #{inspect(value)}", &(&1 == value))
+  end
+
   def hash_schema(opts) do
     __MODULE__.>(hash(), HashSchema.build(opts))
+  end
+
+  def transform_to_hash(opts) do
+    HashMapper.build(opts)
+  end
+
+  def array_of(caster) do
+    __MODULE__.>(array(), ArraySchema.build(caster))
+  end
+
+  def if_(caster, opts) do
+    IfClause.build(caster, opts[:then], opts[:else])
+  end
+
+  def switch(condition, opts) do
+    SwithClause.build(condition, opts[:on], opts[:else])
   end
 end

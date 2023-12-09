@@ -82,6 +82,34 @@ defmodule Datacaster.Error do
     )
   end
 
+  def merge(left = %__MODULE__{}, right = %List{}) do
+    List.merge(
+      List.from_error(left),
+      right
+    )
+  end
+
+  def merge(left = %List{}, right = %__MODULE__{}) do
+    List.merge(
+      left,
+      List.from_error(right)
+    )
+  end
+
+  def merge(left = %__MODULE__{}, right = %Map{}) do
+    Map.merge(
+      Map.new(:base, left),
+      right
+    )
+  end
+
+  def merge(left = %Map{}, right = %__MODULE__{}) do
+    Map.merge(
+      left,
+      Map.new(:base, right)
+    )
+  end
+
   def merge(left = %__MODULE__{}, right = %__MODULE__{}) do
     List.merge(
       List.from_error(left), List.from_error(right)

@@ -34,7 +34,7 @@ defmodule Datacaster do
       unquote(block)
     end
   end
-    
+
   defmodule Absent do
   end
 end

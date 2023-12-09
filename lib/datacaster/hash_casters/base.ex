@@ -1,42 +1,23 @@
-defmodule Datacaster.HashSchema do
+defmodule Datacaster.HashCasters.Base do
   alias Datacaster.{
     Context,
-    Picker,
-    Predefined,
     Success,
     Error
   }
 
-  def build(opts) do
-    modified_casters = Enum.map(opts, fn ({key, caster_node}) ->
-      picker = Picker.build(key)
-      node_with_picker = Predefined.>(picker, caster_node)
-      key_to_check = key_from_pick(key)
-
-      {
-        key_to_check,
-        fn (value, context) ->
-          node_with_picker.(value, context)
-        end
-      }
-    end)
-
+  def build_from_key_casters(key_casters) do
     fn (value, context) ->
-      results = Enum.map(modified_casters, fn {key_to_check, caster} ->
+      results = Enum.map(key_casters, fn {key_to_check, caster} ->
         {result, _} = caster.(value, context)
         {key_to_check, result}
       end)
 
       failures = Enum.filter(results, fn {_key, result} ->
         case result do
-          %Error{} ->
-            true
-          %Error.Map{} ->
-            true
-          %Error.List{} ->
-            true
           %Success{} ->
             false
+          _ ->
+            true
         end
       end)
 
@@ -62,10 +43,7 @@ defmodule Datacaster.HashSchema do
     end
   end
 
-  def key_from_pick(key) when is_tuple(key) do
-    elem(key, 0)
-  end
-
+  def key_from_pick(key) when is_tuple(key), do: elem(key, 0)
   def key_from_pick(key) when is_list(key), do: hd(key)
   def key_from_pick(key) when is_atom(key), do: Atom.to_string(key)
   def key_from_pick(key), do: key
