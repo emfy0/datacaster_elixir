@@ -3,41 +3,38 @@ defmodule DatacasterTest do
   doctest Datacaster
 
   use Datacaster
-  alias Datacaster.{Error, Success, Context}
+  alias Datacaster.{Error, Success, Executor, Context}
 
-  def build_context(val) do
+  def build_context(val, error \\ nil) do
     Map.put(val, :__datacaster__, Context.new())
-  end
-
-  def call_caster(caster, input, context) do
-    caster.(input, build_context(context))
+    |> Context.put_error(error)
   end
 
   describe "#cast" do
     test "creates caster with lambda" do
       caster = Datacaster.schema do
         cast(fn input ->
-          Success.new(input[:foo] == context[:bar])
+          Success.new(input["foo"] == context[:bar])
         end)
       end
    
-      assert call_caster(caster, %{foo: :bar}, %{bar: :bar}) == {Success.new(true), build_context(%{bar: :bar})}
+      assert Executor.run(caster, %{foo: :bar}, %{bar: :bar}) == Success.new(true)
     end
     
     test "it works with & syntax" do
       caster = Datacaster.schema do
-        cast(&(Success.new(&1[:foo] == :bar)))
+        cast(&(Success.new(&1["foo"] == :bar)))
       end
    
-      assert call_caster(caster, %{foo: :bar}, %{bar: :baz}) == {Success.new(true), build_context(%{bar: :baz})}
+      assert Executor.run(caster, %{foo: :bar}, %{bar: :baz}) == Success.new(true)
     end
 
     test "it works with & syntax and context" do
       caster = Datacaster.schema do
-        cast(&(Success.new(&1[:foo] == &2[:bar])))
+        cast(&(Success.new(&1["foo"] == &2[:bar])))
       end
    
-      assert call_caster(caster, %{foo: :bar}, %{bar: :bar}) == {Success.new(true), build_context(%{bar: :bar})}
+      assert Executor.run(caster, %{foo: :bar}, %{bar: :bar}) == Success.new(true)
     end
   end
 
@@ -49,26 +46,26 @@ defmodule DatacasterTest do
         end)
       end
 
-      assert call_caster(caster, 2, %{a: 2}) == {%Success{value: 2}, build_context(%{a: 2})}
-      assert call_caster(caster, 3, %{a: 3}) == {%Error{error: "error", context: build_context(%{a: 3})}, build_context(%{a: 3})}
+      assert Executor.run(caster, 2, %{a: 2}) == %Success{value: 2}
+      assert Executor.run(caster, 3, %{a: 3}) == %Error{error: "error", context: build_context(%{a: 3}, 3)}
     end
   end
 
   describe "definition syntax" do
     test "it works with > syntax" do
       caster = Datacaster.schema do
-        check(&(&1[:foo] == :bar)) > check(fn -> context[:bar] == :baz end)
+        check(&(&1["foo"] == :bar)) > check(fn -> context[:bar] == :baz end)
       end
 
-      assert call_caster(caster, %{foo: :bar}, %{bar: :baz}) == {Success.new(%{foo: :bar}), build_context(%{bar: :baz})}
+      assert Executor.run(caster, %{foo: :bar}, %{bar: :baz}) == Success.new(%{"foo" => :bar})
     end
 
     test "it works with <> syntax" do
       caster = Datacaster.schema do
-        check(&(&1[:foo] == :not_bar)) <> check(fn -> context[:bar] == :baz end)
+        check(&(&1["foo"] == :not_bar)) <> check(fn -> context[:bar] == :baz end)
       end
 
-      assert call_caster(caster, %{foo: :bar}, %{bar: :baz}) == {Success.new(%{foo: :bar}), build_context(%{bar: :baz})}
+      assert Executor.run(caster, %{foo: :bar}, %{bar: :baz}) == Success.new(%{"foo" => :bar})
     end
 
     test "> operator works in lambdas" do
@@ -78,7 +75,7 @@ defmodule DatacasterTest do
         end)
       end
 
-      assert call_caster(caster, 3, build_context(%{a: 2})) == {Success.new(3), build_context(%{a: 2})}
+      assert Executor.run(caster, 3, %{a: 2}) == Success.new(3)
     end
 
     test "it sets context on error" do
@@ -90,7 +87,7 @@ defmodule DatacasterTest do
         end)
       end
 
-      assert call_caster(caster, 3, build_context(%{a: 2})) == {Error.new("invalid", build_context(%{a: 2, b: 3})), build_context(%{a: 2})}
+      assert Executor.run(caster, 3, %{a: 2}) == Error.new("invalid", build_context(%{a: 2, b: 3}, 3))
     end
   end
 
@@ -98,13 +95,13 @@ defmodule DatacasterTest do
     test "it works with hash" do
       caster = Datacaster.schema(do: hash())
 
-      assert call_caster(caster, %{foo: :bar}, %{bar: :baz}) == {Success.new(%{foo: :bar}), build_context(%{bar: :baz})}
+      assert Executor.run(caster, %{foo: :bar}, %{bar: :baz}) == Success.new(%{"foo" => :bar})
     end
 
     test "it returns error on non-hash" do
       caster = Datacaster.schema(do: hash())
 
-      assert call_caster(caster, 1, %{bar: :baz}) == {Error.new("should be a hash", build_context(%{bar: :baz})), build_context(%{bar: :baz})}
+      assert Executor.run(caster, 1, %{bar: :baz}) == Error.new("should be a hash", build_context(%{bar: :baz}, 1))
     end
   end
 end

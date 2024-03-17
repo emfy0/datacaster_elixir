@@ -1,7 +1,7 @@
 defmodule Datacaster.Checker do
   import Datacaster.Builder
 
-  alias Datacaster.{Error, Success}
+  alias Datacaster.{Error, Success, Context}
 
   def build(error_msg, func) do
     func = build_function(func)
@@ -13,7 +13,7 @@ defmodule Datacaster.Checker do
         if value do
           {Success.new(input_value), context}
         else
-          {Error.new(error_msg, res_context), context}
+          {Error.new(error_msg, Context.put_error(res_context, input_value)), context}
         end
       end
     end

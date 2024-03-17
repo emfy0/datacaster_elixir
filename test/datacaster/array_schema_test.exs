@@ -27,17 +27,17 @@ defmodule Datacaster.ArraySchemaTest do
       errors: %{
         0 => %Error{
           error: "invalid",
-          context: checked_context([])
+          context: checked_context([], :foo)
         },
         1 => %Error.List{
           errors: [
             %Error{
               error: "invalid",
-              context: checked_context([])
+              context: checked_context([], :baz)
             },
             %Error{
               error: "invalid",
-              context: checked_context([])
+              context: checked_context([], :baz)
             }
           ]
         }

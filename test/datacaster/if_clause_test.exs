@@ -13,7 +13,7 @@ defmodule Datacaster.IfClauseTest do
   
   test "it returns success" do
     caster = Datacaster.schema do
-      if_(
+      on(
         check(&(&1 == :foo)),
         then: check(&(&1 == :foo)),
         else: check(&(&1 == :bar))
@@ -26,14 +26,14 @@ defmodule Datacaster.IfClauseTest do
 
   test "it returns error" do
     caster = Datacaster.schema do
-      if_(
+      on(
         check(&(&1 == :foo)),
         then: check(&(&1 == :foo)),
         else: check(&(&1 == :bar))
       )
     end
 
-    assert Executor.run(caster, :baz) == Error.new("invalid", checked_context([]))
+    assert Executor.run(caster, :baz) == Error.new("invalid", checked_context([], :baz))
   end
 
   test "it works with nested structures" do
@@ -50,7 +50,7 @@ defmodule Datacaster.IfClauseTest do
         address: string()
       ) * with_kind
 
-      if_(
+      on(
         hash_schema(kind: check(&(&1 == "person"))),
         then: person,
         else: bank
@@ -67,7 +67,7 @@ defmodule Datacaster.IfClauseTest do
       errors: %{
         "age" => %Error{
           error: "should be an integer",
-          context: checked_context([])
+          context: checked_context([], "not_int")
         }
       }
     }

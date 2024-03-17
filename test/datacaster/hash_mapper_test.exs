@@ -52,7 +52,7 @@ defmodule Datacaster.HashMapperTest do
           errors: %{
             "qux" => %Error{
               error: "invalid",
-              context: checked_context([])
+              context: checked_context([], :asd)
             }
           }
         }
@@ -75,13 +75,13 @@ defmodule Datacaster.HashMapperTest do
         errors: %{
           "foo" => %Error{
             error: "invalid",
-            context: checked_context([])
+            context: checked_context([], %{"bar" => :bar, "baz" => %{"qux" => :asd}, "foo" => :asd})
           },
           "baz" => %Error.Map{
             errors: %{
               "qux" => %Error{
                 error: "invalid",
-                context: checked_context([])
+                context: checked_context([], :asd)
               }
             }
           }

@@ -1,5 +1,10 @@
 defmodule Datacaster.Picker do
-  alias Datacaster.{Error, Success, Absent}
+  alias Datacaster.{Error, Success, Absent, Context}
+
+  def key_from_pick(key) when is_tuple(key), do: elem(key, 0)
+  def key_from_pick(key) when is_list(key), do: hd(key)
+  def key_from_pick(key) when is_atom(key), do: Atom.to_string(key)
+  def key_from_pick(key), do: key
 
   def build(keys) do
     build_function(keys)
@@ -8,13 +13,13 @@ defmodule Datacaster.Picker do
   defp build_function(key) do
     fn (value, context) ->
       {
-        Success.new(visitor(key).(value)),
+        Success.new(visitor(key, context).(value)),
         context
       }
     end
   end
 
-  defp visitor(keys) when is_tuple(keys) do
+  defp visitor(keys, context) when is_tuple(keys) do
     keys = Tuple.to_list(keys)
 
     fn
@@ -26,19 +31,19 @@ defmodule Datacaster.Picker do
             val = Absent ->
               val
             _ ->
-              visitor(key).(acc)
+              visitor(key, context).(acc)
           end
         end)
     end
   end
 
-  defp visitor(keys) when is_list(keys) do
+  defp visitor(keys, context) when is_list(keys) do
     fn
       value = %Error{} ->
         value
       value ->
         Enum.reduce(keys, [], fn (key, acc) ->
-          case visitor(key).(value) do
+          case visitor(key, context).(value) do
             val = %Error{} ->
               val
             val ->
@@ -48,7 +53,7 @@ defmodule Datacaster.Picker do
     end
   end
 
-  defp visitor(key) when is_integer(key) do
+  defp visitor(key, context) when is_integer(key) do
     fn 
       value = %Error{} ->
         value
@@ -65,12 +70,12 @@ defmodule Datacaster.Picker do
               Absent
             end
           true ->
-            Error.new("is not a collection")
+            Error.new("is not a collection", context |> Context.put_error(value))
         end
     end
   end
 
-  defp visitor(key) when is_atom(key) do
+  defp visitor(key, context) when is_atom(key) do
     fn
       value = %Error{} ->
         value
@@ -81,12 +86,12 @@ defmodule Datacaster.Picker do
           Keyword.keyword?(value) ->
             Keyword.get(value, key, Keyword.get(value, Atom.to_string(key), Absent))
           true ->
-            Error.new("is not a hash")
+            Error.new("is not a hash", context |> Context.put_error(value))
         end
     end
   end
 
-  defp visitor(key) do
+  defp visitor(key, context) do
     fn
       value = %Error{} ->
         value
@@ -97,7 +102,7 @@ defmodule Datacaster.Picker do
           Keyword.keyword?(value) ->
             Keyword.get(value, key, Absent)
           true ->
-            Error.new("is not a hash")
+            Error.new("is not a hash", context |> Context.put_error(value))
         end
     end
   end

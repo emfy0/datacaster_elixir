@@ -38,11 +38,11 @@ defmodule Datacaster.Predefined do
 
   def left <> right when is_function(left) and is_function(right) do
     fn (value, context) ->
-      {result, context} = left.(value, context)
+      {result, left_context} = left.(value, context)
 
       case result do
         %Success{} ->
-          {result, context}
+          {result, left_context}
         _ ->
           right.(value, context)
       end
@@ -80,7 +80,7 @@ defmodule Datacaster.Predefined do
   defmacro check(error_msg \\ "invalid", func) do
     Checker.build(error_msg, func)
   end
-  
+
   def hash, do: check("should be a hash", &is_map/1)
   def array, do: check("should be an array", &is_list/1)
   def string, do: check("should be a string", &is_bitstring/1)
@@ -112,7 +112,7 @@ defmodule Datacaster.Predefined do
     __MODULE__.>(array(), ArraySchema.build(caster))
   end
 
-  def if_(caster, opts) do
+  def on(caster, opts) do
     IfClause.build(caster, opts[:then], opts[:else])
   end
 

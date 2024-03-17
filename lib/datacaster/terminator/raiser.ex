@@ -1,7 +1,7 @@
 defmodule Datacaster.Terminator.Raiser do
   use Datacaster.Terminator
 
-  alias Datacaster.Error
+  alias Datacaster.{Error, Context}
 
   def check_schema(value, context, result, current_checked_schema) do
     case retrive_schema_from_value(value) do
@@ -15,7 +15,9 @@ defmodule Datacaster.Terminator.Raiser do
         else
           {
             Enum.reduce(diff, %Error.Map{}, fn key, acc ->
-              Error.Map.add_key(acc, key, Error.new("should be absent"))
+              Error.Map.add_key(
+                acc, key, Error.new("should be absent", Context.put_error(context, value[key]))
+              )
             end),
             context
           }

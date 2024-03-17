@@ -1,7 +1,7 @@
 defmodule Datacaster.Caster do
   import Datacaster.Builder
 
-  alias Datacaster.{Error, Success}
+  alias Datacaster.{Error, Success, Context}
 
   def build(func) do
     func = build_function(func)
@@ -14,7 +14,7 @@ defmodule Datacaster.Caster do
           %Success{} ->
             {value, context}
           %Error{} ->
-            {%Error{value | context: res_context}, context}
+            {%Error{value | context: Context.put_error(res_context, input_value)}, context}
           _ ->
             raise "invalid caster return value, expected Success or Error, got: #{inspect(value)}"
         end

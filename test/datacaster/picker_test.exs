@@ -2,6 +2,8 @@ defmodule Datacaster.PickerTest do
   use ExUnit.Case
 
   use Datacaster
+  import DatacasterTestHelper
+
   alias Datacaster.{Error, Success, Absent, Executor}
 
   describe "pick" do
@@ -73,14 +75,14 @@ defmodule Datacaster.PickerTest do
       caster = Datacaster.schema do
         pick(:foo)
       end
-      assert Executor.run(caster, ["bar", "baz"], %{}) == Error.new("is not a hash")
+      assert Executor.run(caster, ["bar", "baz"], %{}) == Error.new("is not a hash", checked_context([], ["bar", "baz"]))
     end
 
     test "it returns error on invalid input with nested maps" do
       caster = Datacaster.schema do
         pick({"foo", :bar})
       end
-      assert Executor.run(caster, ["foo", "bar"], %{}) == Error.new("is not a hash")
+      assert Executor.run(caster, ["foo", "bar"], %{}) == Error.new("is not a hash", checked_context([], ["foo", "bar"]))
     end
 
     test "it works with nested structures" do

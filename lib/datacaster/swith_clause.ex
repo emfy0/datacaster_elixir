@@ -4,6 +4,7 @@ defmodule Datacaster.SwithClause do
     Success,
     Picker,
     Error,
+    Context
   }
 
   def build(statement, on_caluses, else_clause) do
@@ -14,7 +15,7 @@ defmodule Datacaster.SwithClause do
     end)
 
     fn (initial_value, context) ->
-      {result, _context} = statement.(initial_value, context)
+      {result, context} = statement.(initial_value, context)
 
       case result do
         %Success{value: value} ->
@@ -49,12 +50,17 @@ defmodule Datacaster.SwithClause do
     if is_function(else_clause) do
       else_clause.(value, context)
     else
-      {Error.new("is invalid", context), context}
+      {Error.new("is invalid", context |> Context.put_error(value)), context}
     end
   end
 
   defp build_pick_from_shortcut(key) when is_function(key), do: key
-  defp build_pick_from_shortcut(key), do: Picker.build(key)
+  defp build_pick_from_shortcut(key) do
+    Predefined.>(Picker.build(key), fn (value, context) ->
+      key_to_check = Picker.key_from_pick(key)
+      {Success.new(value), Context.check_key(context, key_to_check)}
+    end)
+  end
 
   defp build_compare_from_shortcut(key) when is_function(key), do: key
   defp build_compare_from_shortcut(key) when is_atom(key) do

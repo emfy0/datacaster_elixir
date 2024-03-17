@@ -2,6 +2,7 @@ defmodule Datacaster.TerminatorTest do
   use ExUnit.Case
 
   use Datacaster
+  import DatacasterTestHelper
 
   alias Datacaster.{
     Success,
@@ -19,10 +20,7 @@ defmodule Datacaster.TerminatorTest do
 
     assert Executor.run(caster, %{foo: :foo, bar: :bar, extra: "any"}) == %Error.Map{
       errors: %{
-        "extra" => %Error{
-          error: "should be absent",
-          context: nil
-        }
+        "extra" => Error.new("should be absent", checked_context(["foo", "bar"], "any"))
       }
     }
   end

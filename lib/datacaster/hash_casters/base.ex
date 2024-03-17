@@ -42,9 +42,4 @@ defmodule Datacaster.HashCasters.Base do
       end
     end
   end
-
-  def key_from_pick(key) when is_tuple(key), do: elem(key, 0)
-  def key_from_pick(key) when is_list(key), do: hd(key)
-  def key_from_pick(key) when is_atom(key), do: Atom.to_string(key)
-  def key_from_pick(key), do: key
 end

@@ -10,7 +10,7 @@ defmodule Datacaster.HashCasters.HashSchema do
     Enum.map(opts, fn ({key, caster_node}) ->
       picker = Picker.build(key)
       node_with_picker = Predefined.>(picker, caster_node)
-      key_to_check = key_from_pick(key)
+      key_to_check = Picker.key_from_pick(key)
 
       {
         key_to_check,
