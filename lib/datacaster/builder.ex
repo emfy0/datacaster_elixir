@@ -1,4 +1,6 @@
 defmodule Datacaster.Builder do
+  alias Datacaster.Context
+
   def build_function({op = :fn, fn_meta, fn_args}) do
     context_var = {:context, [generated: true], nil}
     input_var = {:input, [generated: true], nil}
@@ -21,6 +23,8 @@ defmodule Datacaster.Builder do
         [
           args,
           quote do
+            use Context.CasterHelpers
+
             result = unquote(body)
             {result, unquote(context_var)}
           end

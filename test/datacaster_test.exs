@@ -104,4 +104,15 @@ defmodule DatacasterTest do
       assert Executor.run(caster, 1, %{bar: :baz}) == Error.new("should be a hash", build_context(%{bar: :baz}, 1))
     end
   end
+
+  describe "#included_in" do
+    test "it works with included_in" do
+      caster = Datacaster.schema do
+        included_in([1, 2, 3])
+      end
+
+      assert Executor.run(caster, 1, %{bar: :baz}) == Success.new(1)
+      assert Executor.run(caster, 4, %{bar: :baz}) == Error.new("should be included in [1, 2, 3]", build_context(%{bar: :baz}, 4))
+    end
+  end
 end

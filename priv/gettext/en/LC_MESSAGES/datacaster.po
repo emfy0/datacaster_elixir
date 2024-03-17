@@ -1,0 +1,5 @@
+msgid "test"
+msgstr "test translation"
+
+msgid "my error"
+msgstr "my error translation %{var1} %{var2}"

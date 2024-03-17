@@ -10,3 +10,6 @@ defmodule DatacasterTestHelper do
   end
 end
 
+defmodule Datacaster.Gettext do
+  use Gettext, otp_app: :datacaster
+end

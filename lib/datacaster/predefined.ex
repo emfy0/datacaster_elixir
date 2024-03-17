@@ -81,23 +81,52 @@ defmodule Datacaster.Predefined do
     Checker.build(error_msg, func)
   end
 
-  def hash, do: check("should be a hash", &is_map/1)
-  def array, do: check("should be an array", &is_list/1)
-  def string, do: check("should be a string", &is_bitstring/1)
-  def integer, do: check("should be an integer", &is_integer/1)
-  def float, do: check("should be a float", &is_float/1)
-  def boolean, do: check("should be a boolean", &is_boolean/1)
+  def hash(error \\ nil) do 
+    error = error || "should be a hash"
+    check(error, &is_map/1)
+  end
+
+  def array(error \\ nil) do
+    error = error || "should be an array"
+    check(error, &is_list/1)
+  end
+
+  def string(error \\ nil) do
+    error = error || "should be a string"
+    check(error, &is_bitstring/1)
+  end
+
+  def integer(error \\ nil) do
+    error = error || "should be an integer"
+    check(error, &is_integer/1)
+  end
+
+  def float(error \\ nil) do
+    error = error || "should be a float"
+    check(error, &is_float/1)
+  end
+
+  def boolean(error \\ nil) do
+    error = error || "should be a boolean"
+    check(error, &is_boolean/1)
+  end
 
   def pick(opts) do
     Picker.build(opts)
+  end
+
+  def included_in(list, error \\ nil) do
+    error = error || "should be included in #{inspect(list)}"
+    check(error, &Enum.member?(list, &1))
   end
 
   def pass do
     fn (value, context) -> {value, context} end
   end
 
-  def compare(value) do
-    check("should be equal to #{inspect(value)}", &(&1 == value))
+  def compare(value, error \\ nil) do
+    error = error || "should be equal to #{inspect(value)}"
+    check(error, &(&1 == value))
   end
 
   def hash_schema(opts) do
