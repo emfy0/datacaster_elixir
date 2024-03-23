@@ -30,7 +30,7 @@ defmodule Datacaster.HashCasters.Base do
         keys_checked = results |> Enum.map(fn {key, _} -> key end)
 
         {
-          Map.merge(value, result) |> Success.new,
+          Map.merge(value, result) |> clear_absent_keys |> Success.new,
           Context.check_key(context, keys_checked)
         }
       else
@@ -41,5 +41,11 @@ defmodule Datacaster.HashCasters.Base do
         {result, context}
       end
     end
+  end
+
+  defp clear_absent_keys(result) do
+    Map.filter(result, fn {_key, value} ->
+      value != Datacaster.Absent
+    end)
   end
 end

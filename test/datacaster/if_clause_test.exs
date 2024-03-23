@@ -7,8 +7,7 @@ defmodule Datacaster.IfClauseTest do
 
   alias Datacaster.{
     Success,
-    Error,
-    Executor
+    Error
   }
   
   test "it returns success" do
@@ -20,8 +19,8 @@ defmodule Datacaster.IfClauseTest do
       )
     end
 
-    assert Executor.run(caster, :foo) == Success.new(:foo)
-    assert Executor.run(caster, :bar) == Success.new(:bar)
+    assert run_caster(caster, :foo) == Success.new(:foo)
+    assert run_caster(caster, :bar) == Success.new(:bar)
   end
 
   test "it returns error" do
@@ -33,7 +32,7 @@ defmodule Datacaster.IfClauseTest do
       )
     end
 
-    assert Executor.run(caster, :baz) == Error.new("invalid", checked_context([], :baz))
+    assert run_caster(caster, :baz) == Error.new("invalid", checked_context([], :baz))
   end
 
   test "it works with nested structures" do
@@ -57,13 +56,13 @@ defmodule Datacaster.IfClauseTest do
       )
     end
 
-    assert Executor.run(caster, %{kind: "person", name: "John", age: 30}) == Success.new(
+    assert run_caster(caster, %{kind: "person", name: "John", age: 30}) == Success.new(
       %{"kind" => "person", "name" => "John", "age" =>  30}
     )
-    assert Executor.run(caster, %{kind: "bank", name: "Bank", address: "Street"}) == Success.new(
+    assert run_caster(caster, %{kind: "bank", name: "Bank", address: "Street"}) == Success.new(
       %{"kind" => "bank", "name" => "Bank", "address" => "Street"}
     )
-    assert Executor.run(caster, %{kind: "person", name: "John", age: "not_int"}) == %Error.Map{
+    assert run_caster(caster, %{kind: "person", name: "John", age: "not_int"}) == %Error.Map{
       errors: %{
         "age" => %Error{
           error: "should be an integer",

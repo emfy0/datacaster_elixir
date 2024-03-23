@@ -11,7 +11,7 @@ defmodule Datacaster.Checker do
         {value, res_context} = func.(input_value, context)
 
         if value do
-          {Success.new(input_value), context}
+          {Success.new(input_value), res_context}
         else
           {Error.new(error_msg, Context.put_error(res_context, input_value)), context}
         end

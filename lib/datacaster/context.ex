@@ -20,17 +20,26 @@ defmodule Datacaster.Context do
   defmodule CasterHelpers do
     defmacro __using__(_) do
       quote do
+        import Datacaster.Context
         import unquote(__MODULE__)
       end
     end
 
     defmacro gettext_opts!(opts) do
-      opts = Enum.into(opts, %{})
-
       quote do
-        old_opts = var!(context).__datacaster__.gettext_options
-        new_opts = Map.merge(old_opts, unquote(Macro.escape(opts)))
-        var!(context) = put_in(var!(context).__datacaster__.gettext_options, new_opts)
+        var!(context) = put_gettext_options(var!(context), unquote(opts))
+      end
+    end
+
+    defmacro gettext_namespace!(namespace) do
+      quote do
+        var!(context) = put_gettext_namespace(var!(context), unquote(namespace))
+      end
+    end
+
+    defmacro gettext_context!(context) do
+      quote do
+        var!(context) = put_gettext_context(var!(context), unquote(context))
       end
     end
   end
@@ -47,6 +56,22 @@ defmodule Datacaster.Context do
 
   def put_error(context, value) do
     put_in(context.__datacaster__.error_value, value)
+  end
+
+  def put_gettext_namespace(context, namespace) do
+    put_in(context.__datacaster__.gettext_namespace, namespace)
+  end
+
+  def put_gettext_context(context, gettext_context) do
+    put_in(context.__datacaster__.gettext_context, gettext_context)
+  end
+
+  def put_gettext_options(context, gettext_options) do
+    gettext_options = Enum.into(gettext_options, %{})
+
+    old_opts = context.__datacaster__.gettext_options
+    new_opts = Map.merge(old_opts, gettext_options)
+    put_in(context.__datacaster__.gettext_options, new_opts)
   end
 
   defp gettext_default_namespace, do:

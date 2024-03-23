@@ -6,8 +6,7 @@ defmodule Datacaster.ArraySchemaTest do
 
   alias Datacaster.{
     Error,
-    Success,
-    Executor
+    Success
   }
 
   test "it returns success" do
@@ -15,7 +14,7 @@ defmodule Datacaster.ArraySchemaTest do
       array_of(check(&(&1 == :foo)))
     end
 
-    assert Executor.run(caster, [:foo, :foo]) == Success.new([:foo, :foo])
+    assert run_caster(caster, [:foo, :foo]) == Success.new([:foo, :foo])
   end
 
   test "it returns error" do
@@ -23,7 +22,7 @@ defmodule Datacaster.ArraySchemaTest do
       array_of(check(&(&1 == :foo)) * check(&(&1 == :bar)))
     end
 
-    assert Executor.run(caster, [:foo, :baz]) == %Error.Map{
+    assert run_caster(caster, [:foo, :baz]) == %Error.Map{
       errors: %{
         0 => %Error{
           error: "invalid",

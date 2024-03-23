@@ -8,6 +8,9 @@ defmodule Datacaster.Predefined do
     ArraySchema,
     HashCasters.HashSchema,
     HashCasters.HashMapper,
+    Transformer,
+    Trier,
+    Runner,
     Terminator.Raiser,
     Terminator.Sweeper,
     IfClause,
@@ -77,38 +80,120 @@ defmodule Datacaster.Predefined do
     Caster.build(func)
   end
 
-  defmacro check(error_msg \\ "invalid", func) do
-    Checker.build(error_msg, func)
+  defmacro check(error \\ "invalid", func) do
+    Checker.build(error, func)
   end
 
-  def hash(error \\ nil) do 
-    error = error || "should be a hash"
+  defmacro transform(func) do
+    Transformer.build(func)
+  end
+
+  defmacro run(func) do
+    Runner.build(func)
+  end
+
+  defmacro trier(error \\ "invalid", exception, func) do
+    Trier.build(func, exception, error)
+  end
+
+  def gettext_opts(caster, opts) do
+    __MODULE__.>(run(fn _ -> gettext_opts!(opts) end), caster)
+  end
+
+  def gettext_namespace(caster, namespaces) do
+    __MODULE__.>(run(fn _ -> gettext_namespace!(namespaces) end), caster)
+  end
+
+  def gettext_context(caster, gettext_context) do
+    __MODULE__.>(run(fn _ -> gettext_context!(gettext_context) end), caster)
+  end
+
+  def remove do
+    fn (_, context) -> {Success.new(Datacaster.Absent), context} end
+  end
+
+  def hash(error \\ "should be a hash") do 
     check(error, &is_map/1)
   end
 
-  def array(error \\ nil) do
-    error = error || "should be an array"
+  def array(error \\ "should be an array") do
     check(error, &is_list/1)
   end
 
-  def string(error \\ nil) do
-    error = error || "should be a string"
+  def string(error \\ "should be a string") do
     check(error, &is_bitstring/1)
   end
 
-  def integer(error \\ nil) do
-    error = error || "should be an integer"
+  def non_empty_string(error \\ "should be a non-empty string") do
+    check(error, &(&1 != "" && is_bitstring(&1)))
+  end
+
+  def integer(error \\ "should be an integer") do
     check(error, &is_integer/1)
   end
 
-  def float(error \\ nil) do
-    error = error || "should be a float"
+  def to_integer(error \\ "should be an integer") do
+    trier(error, ArgumentError, fn value ->
+      case value do
+        value when is_integer(value) -> value
+        value when is_bitstring(value) -> String.to_integer(value)
+        _ -> Error.new(error)
+      end
+    end)
+  end
+
+  def to_float(error \\ "should be a float") do
+    trier(error, ArgumentError, fn value ->
+      case value do
+        value when is_float(value) -> value
+        value when is_bitstring(value) -> String.to_float(value)
+        _ -> Error.new(error)
+      end
+    end)
+  end
+
+  def float(error \\ "should be a float") do
     check(error, &is_float/1)
   end
 
-  def boolean(error \\ nil) do
-    error = error || "should be a boolean"
+  def boolean(error \\ "should be a boolean") do
     check(error, &is_boolean/1)
+  end
+
+  def to_boolean(error \\ "should be a boolean") do
+    cast(fn value ->
+      case value do
+        true -> Success.new(true)
+        false -> Success.new(false)
+        "true" -> Success.new(true)
+        "false" -> Success.new(false)
+        1 -> Success.new(true)
+        0 -> Success.new(false)
+        "1" -> Success.new(true)
+        _ -> Error.new(error)
+      end
+    end)
+  end
+
+  def iso_8601(error \\ "should be an ISO 8601 date") do
+    cast(fn date ->
+      case DateTime.from_iso8601(date) do
+        {:ok, date, _} ->
+          Success.new(date)
+        _ ->
+          Error.new(error)
+      end
+    end)
+  end
+
+  def optional(caster, opts \\ []) do
+    if Keyword.has_key?(opts, :on) do
+      __MODULE__.<>(
+        __MODULE__.>(compare(opts[:on]), remove()), caster
+      )
+    else
+      __MODULE__.<>(compare(Datacaster.Absent), caster)
+    end
   end
 
   def pick(opts) do

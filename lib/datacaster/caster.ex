@@ -12,7 +12,7 @@ defmodule Datacaster.Caster do
 
         case value do
           %Success{} ->
-            {value, context}
+            {value, res_context}
           %Error{} ->
             {%Error{value | context: Context.put_error(res_context, input_value)}, context}
           _ ->

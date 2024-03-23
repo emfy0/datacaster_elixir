@@ -18,7 +18,8 @@ defmodule Datacaster.MixProject do
       env: [
         gettext_default_namespace: "datacaster",
         gettext_default_backend: Datacaster.Gettext,
-        gettext_module: Gettext
+        gettext_module: Gettext,
+        changeset_module: Ecto.Changeset
       ]
     ]
   end
@@ -26,7 +27,8 @@ defmodule Datacaster.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:gettext, "~> 0.24.0", optional: true}
+      {:gettext, ">= 0.20.0", optional: true},
+      {:ecto, "~> 3.0", optional: true}
     ]
   end
 end

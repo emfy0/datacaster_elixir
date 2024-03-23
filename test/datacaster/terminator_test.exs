@@ -6,8 +6,7 @@ defmodule Datacaster.TerminatorTest do
 
   alias Datacaster.{
     Success,
-    Error,
-    Executor
+    Error
   }
 
   test "Raiser raises error on unchecked schema" do
@@ -18,7 +17,7 @@ defmodule Datacaster.TerminatorTest do
       )
     end
 
-    assert Executor.run(caster, %{foo: :foo, bar: :bar, extra: "any"}) == %Error.Map{
+    assert run_caster(caster, %{foo: :foo, bar: :bar, extra: "any"}) == %Error.Map{
       errors: %{
         "extra" => Error.new("should be absent", checked_context(["foo", "bar"], "any"))
       }
@@ -33,7 +32,7 @@ defmodule Datacaster.TerminatorTest do
       )
     end
 
-    assert Executor.run(caster, %{foo: :foo, bar: :bar, extra: "any"}) ==
+    assert run_caster(caster, %{foo: :foo, bar: :bar, extra: "any"}) ==
       Success.new(%{"foo" => :foo, "bar" => :bar})
   end
 end

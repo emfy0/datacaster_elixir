@@ -7,8 +7,7 @@ defmodule Datacaster.SwitchCaluseTest do
 
   alias Datacaster.{
     Success,
-    Error,
-    Executor
+    Error
   }
   
   test "it works with nested structures" do
@@ -35,13 +34,13 @@ defmodule Datacaster.SwitchCaluseTest do
       )
     end
 
-    assert Executor.run(caster, %{kind: "person", name: "John", age: 30}) == Success.new(
+    assert run_caster(caster, %{kind: "person", name: "John", age: 30}) == Success.new(
       %{"kind" => "person", "name" => "John", "age" =>  30}
     )
-    assert Executor.run(caster, %{kind: "bank", name: "Bank", address: "Street"}) == Success.new(
+    assert run_caster(caster, %{kind: "bank", name: "Bank", address: "Street"}) == Success.new(
       %{"kind" => "bank", "name" => "Bank", "address" => "Street"}
     )
-    assert Executor.run(caster, %{kind: "person", name: "John", age: "not_int"}) == %Error.Map{
+    assert run_caster(caster, %{kind: "person", name: "John", age: "not_int"}) == %Error.Map{
       errors: %{
         "age" => %Error{
           error: "should be an integer",
@@ -49,8 +48,8 @@ defmodule Datacaster.SwitchCaluseTest do
         }
       }
     }
-    assert Executor.run(caster, %{kind: "???", name: "Bank", address: "Street"}) == Error.new("HELLO", checked_context(["kind"], "???"))
-    assert Executor.run(caster, %{kind: "bank", name: "Bank", address: "Street", extra: "some"}) == %Error.Map{
+    assert run_caster(caster, %{kind: "???", name: "Bank", address: "Street"}) == Error.new("HELLO", checked_context(["kind"], "???"))
+    assert run_caster(caster, %{kind: "bank", name: "Bank", address: "Street", extra: "some"}) == %Error.Map{
       errors: %{
         "extra" => %Error{
           error: "should be absent",
@@ -82,13 +81,13 @@ defmodule Datacaster.SwitchCaluseTest do
       )
     end
 
-    assert Executor.run(caster, %{kind: "person", name: "John", age: 30}) == Success.new(
+    assert run_caster(caster, %{kind: "person", name: "John", age: 30}) == Success.new(
       %{"kind" => "person", "name" => "John", "age" =>  30}
     )
-    assert Executor.run(caster, %{kind: "bank", name: "Bank", address: "Street"}) == Success.new(
+    assert run_caster(caster, %{kind: "bank", name: "Bank", address: "Street"}) == Success.new(
       %{"kind" => "bank", "name" => "Bank", "address" => "Street"}
     )
-    assert Executor.run(caster, %{kind: "person", name: "John", age: "not_int"}) == %Error.Map{
+    assert run_caster(caster, %{kind: "person", name: "John", age: "not_int"}) == %Error.Map{
       errors: %{
         "age" => %Error{
           error: "should be an integer",
@@ -96,8 +95,8 @@ defmodule Datacaster.SwitchCaluseTest do
         }
       }
     }
-    assert Executor.run(caster, %{kind: "???", name: "Bank", address: "Street"}) == Error.new("HELLO", checked_context(["kind"], "???"))
-    assert Executor.run(caster, %{kind: "bank", name: "Bank", address: "Street", extra: "some"}) == %Error.Map{
+    assert run_caster(caster, %{kind: "???", name: "Bank", address: "Street"}) == Error.new("HELLO", checked_context(["kind"], "???"))
+    assert run_caster(caster, %{kind: "bank", name: "Bank", address: "Street", extra: "some"}) == %Error.Map{
       errors: %{
         "extra" => Error.new("should be absent", checked_context(["kind", "name", "address"], "some"))
       }
@@ -126,13 +125,13 @@ defmodule Datacaster.SwitchCaluseTest do
       )
     end
 
-    assert Executor.run(caster, %{kind: "person", name: "John", age: 30}) == Success.new(
+    assert run_caster(caster, %{kind: "person", name: "John", age: 30}) == Success.new(
       %{"kind" => "person", "name" => "John", "age" =>  30}
     )
-    assert Executor.run(caster, %{kind: "bank", name: "Bank", address: "Street"}) == Success.new(
+    assert run_caster(caster, %{kind: "bank", name: "Bank", address: "Street"}) == Success.new(
       %{"kind" => "bank", "name" => "Bank", "address" => "Street"}
     )
-    assert Executor.run(caster, %{kind: "person", name: "John", age: "not_int"}) == %Error.Map{
+    assert run_caster(caster, %{kind: "person", name: "John", age: "not_int"}) == %Error.Map{
       errors: %{
         "age" => %Error{
           error: "should be an integer",
@@ -140,8 +139,8 @@ defmodule Datacaster.SwitchCaluseTest do
         }
       }
     }
-    assert Executor.run(caster, %{kind: "???", name: "Bank", address: "Street"}) == Error.new("HELLO", checked_context(["kind"], "???"))
-    assert Executor.run(caster, %{kind: "bank", name: "Bank", address: "Street", extra: "some"}) == %Error.Map{
+    assert run_caster(caster, %{kind: "???", name: "Bank", address: "Street"}) == Error.new("HELLO", checked_context(["kind"], "???"))
+    assert run_caster(caster, %{kind: "bank", name: "Bank", address: "Street", extra: "some"}) == %Error.Map{
       errors: %{
         "extra" => Error.new("should be absent", checked_context(["kind", "name", "address"], "some"))
       }

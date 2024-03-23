@@ -6,8 +6,7 @@ defmodule Datacaster.HashMapperTest do
 
   alias Datacaster.{
     Error,
-    Success,
-    Executor
+    Success
   }
 
   test "it maps data" do
@@ -18,7 +17,7 @@ defmodule Datacaster.HashMapperTest do
       )
     end
 
-    assert Executor.run(caster, %{foo: :foo, bar: :bar}) == Success.new(%{"foo" => :foo, "bar" => :bar})
+    assert run_caster(caster, %{foo: :foo, bar: :bar}) == Success.new(%{"foo" => :foo, "bar" => :bar})
   end
 
   test "it works with nested structures" do
@@ -32,7 +31,7 @@ defmodule Datacaster.HashMapperTest do
       )
     end
 
-    assert Executor.run(caster, %{foo: :foo, bar: :bar, baz: %{qux: :qux}}) == Success.new(%{"foo" => :foo, "bar" => :bar, "baz" => %{"qux" => :qux}})
+    assert run_caster(caster, %{foo: :foo, bar: :bar, baz: %{qux: :qux}}) == Success.new(%{"foo" => :foo, "bar" => :bar, "baz" => %{"qux" => :qux}})
   end
 
   test "it returns error" do
@@ -46,7 +45,7 @@ defmodule Datacaster.HashMapperTest do
       )
     end
   
-    assert Executor.run(caster, %{foo: :foo, bar: :bar, baz: %{qux: :asd}}) == %Error.Map{
+    assert run_caster(caster, %{foo: :foo, bar: :bar, baz: %{qux: :asd}}) == %Error.Map{
       errors: %{
         "baz" => %Error.Map{
           errors: %{
@@ -71,7 +70,7 @@ defmodule Datacaster.HashMapperTest do
       )
     end
   
-    assert Executor.run(caster, %{foo: :asd, bar: :bar, baz: %{qux: :asd}}) == %Error.Map{
+    assert run_caster(caster, %{foo: :asd, bar: :bar, baz: %{qux: :asd}}) == %Error.Map{
         errors: %{
           "foo" => %Error{
             error: "invalid",
@@ -100,7 +99,7 @@ defmodule Datacaster.HashMapperTest do
       )
     end
   
-    assert Executor.run(caster, %{"foo" => :foo, "bar" => :bar, "baz" => %{"qux" => :qux}}) ==
+    assert run_caster(caster, %{"foo" => :foo, "bar" => :bar, "baz" => %{"qux" => :qux}}) ==
       Success.new(%{"foo" => :foo, "bar" => :bar, "baz" => %{"qux" => :qux}})
   end
 end
