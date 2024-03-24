@@ -30,7 +30,10 @@ defmodule Datacaster.ChangesetTest do
           bar: :bar,
           baz: struct(changeset_module(), %{
             action: nil,
-            errors: [qux: [{"invalid", []}]],
+            changes: %{
+              qux: :asd
+            },
+            errors: [qux: {"invalid", [validation: :invalid]}],
             data: %{},
             valid?: false
           })

@@ -133,20 +133,24 @@ defmodule Datacaster.Predefined do
   end
 
   def to_integer(error \\ "should be an integer") do
-    trier(error, ArgumentError, fn value ->
+    trier(error, MatchError, fn value ->
       case value do
         value when is_integer(value) -> value
-        value when is_bitstring(value) -> String.to_integer(value)
+        value when is_bitstring(value) ->
+          {value, _} = Integer.parse(value)
+          value
         _ -> Error.new(error)
       end
     end)
   end
 
   def to_float(error \\ "should be a float") do
-    trier(error, ArgumentError, fn value ->
+    trier(error, MatchError, fn value ->
       case value do
         value when is_float(value) -> value
-        value when is_bitstring(value) -> String.to_float(value)
+        value when is_bitstring(value) ->
+          {value, _ } = Float.parse(value)
+          value
         _ -> Error.new(error)
       end
     end)
@@ -206,7 +210,7 @@ defmodule Datacaster.Predefined do
   end
 
   def pass do
-    fn (value, context) -> {value, context} end
+    fn (value, context) -> {Success.new(value), context} end
   end
 
   def compare(value, error \\ nil) do
