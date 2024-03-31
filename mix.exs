@@ -6,7 +6,7 @@ defmodule Datacaster.MixProject do
   def project do
     [
       app: :datacaster,
-      version: "0.1.5",
+      version: "0.1.9",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
 
@@ -24,6 +24,7 @@ defmodule Datacaster.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {Datacaster.Application, []},
       env: [
         gettext_default_namespace: "datacaster",
         gettext_default_backend: Datacaster.Gettext,
