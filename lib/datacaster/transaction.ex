@@ -18,6 +18,8 @@ defmodule Datacaster.Transaction do
         defoverridable [{unquote(name), 1}]
       end
     end
+
+    def modify(_, _, _, block), do: block
   end
 
   defmodule Finalizers do
@@ -40,9 +42,7 @@ defmodule Datacaster.Transaction do
       end
     end
 
-    def finalizer(_, _, _opts) do
-      nil
-    end
+    def finalizer(_, _, _opts), do: nil
   end
 
   defmacro step(name, opts \\ []) do
@@ -72,6 +72,38 @@ defmodule Datacaster.Transaction do
     end
   end
 
+  defmacro within(adapter_module, adapter_function, do: block) do
+    name = String.to_atom("Within#{System.unique_integer()}")
+
+    current_module = __CALLER__.module
+    module_name = String.to_atom("#{current_module}.Datacaster#{name}}")
+
+    quote do
+      defmodule unquote(module_name) do
+        use Datacaster.Transaction
+
+        unquote(block)
+
+        Enum.map(@steps, fn {kind, name} ->
+          module_name = unquote(module_name)
+          current_module = unquote(current_module)
+
+          delegation = quote do
+            defdelegate unquote(name)(params), to: unquote(current_module)
+          end
+
+          Module.eval_quoted(unquote(module_name), delegation)
+        end)
+      end
+
+      def unquote(name)(params) do
+        unquote(adapter_module).unquote(adapter_function)(params, &unquote(module_name).run/1)
+      end
+
+      @steps @steps ++ [{:within, unquote(name)}]
+    end
+  end
+
   def do!(expr) do
     case expr do
       {:ok, result} -> result
@@ -79,9 +111,10 @@ defmodule Datacaster.Transaction do
     end
   end
 
-  defp build_step(name, opts) do
-    block = quote do end
+  def ok(data), do: {:ok, data}
+  def err(reason), do: {:error, reason}
 
+  defp build_step(name, opts, block \\ quote do end) do
     Enum.reduce(opts, block, fn {key, value}, acc ->
       Modifier.modify(name, key, value, acc)
     end)

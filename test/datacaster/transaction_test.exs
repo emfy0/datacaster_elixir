@@ -113,4 +113,58 @@ defmodule Datacaster.TransactionTest do
       assert TestTransaction3.run(%{}) == {:ok, %{foo: :foo, bar: :bar}}
     end
   end
+
+  describe "works with within" do
+    defmodule TestTransaction5.WithinExt do
+      use Datacaster.Transaction
+
+      def second(data, callable) do
+        data = data ++ ["second1"]
+        data = do! callable.(data)
+        ok(data ++ ["second2"])
+      end
+    end
+
+    defmodule TestTransaction5 do
+      use Datacaster.Transaction
+
+      map :first
+
+      within TestTransaction5.WithinExt, :second do
+        map :third
+        map :fourth
+      end
+
+      within TestTransaction5.WithinExt, :second do
+        map :fifth
+        map :sixth
+      end
+
+      def first(data) do
+        data ++ ["first"]
+      end
+
+      def third(data) do
+        data ++ ["third"]
+      end
+
+      def fourth(data) do
+        data ++ ["fourth"]
+      end
+
+      def fifth(data) do
+        data ++ ["fifth"]
+      end
+
+      def sixth(data) do
+        data ++ ["sixth"]
+      end
+    end
+
+    test "it runs" do
+      assert TestTransaction5.run([]) == {
+        :ok, ["first", "second1", "third", "fourth", "second2", "second1", "fifth", "sixth", "second2"]
+      }
+    end
+  end
 end

@@ -6,7 +6,7 @@ defmodule Datacaster.MixProject do
   def project do
     [
       app: :datacaster,
-      version: "0.1.9",
+      version: "0.1.10",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
 
