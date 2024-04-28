@@ -52,7 +52,7 @@ defmodule Datacaster.Executor do
     top_level_errors =
       top_level_errors      
       |> Enum.map(fn {key, error} ->
-        {String.to_existing_atom(key), errors_to_changeset(value, error)}
+        {to_atom_or_string(key), errors_to_changeset(value, error)}
       end)
       |> Enum.flat_map(fn {key, errors} ->
         Enum.map(errors, fn error -> {key, error} end)
@@ -62,19 +62,19 @@ defmodule Datacaster.Executor do
     valid_params =
       value
       |> Map.take(valid_params_keys)
-      |> Enum.map(fn {key, value} -> {String.to_existing_atom(key), value} end)
+      |> Enum.map(fn {key, value} -> {to_atom_or_string(key), value} end)
       |> Enum.into(%{})
 
     top_level_errors_for_changes =
       value
       |> Enum.filter(fn {key, _} -> key in top_level_errors_keys end)
-      |> Enum.map(fn {key, error} -> {String.to_existing_atom(key), error} end)
+      |> Enum.map(fn {key, error} -> {to_atom_or_string(key), error} end)
       |> Enum.into(%{})
 
     changes =
       other_errors
       |> Enum.reject(fn {key, _} -> is_list(key) end)
-      |> Enum.map(fn {key, error} -> {String.to_existing_atom(key), errors_to_changeset(value[key], error)} end)
+      |> Enum.map(fn {key, error} -> {to_atom_or_string(key), errors_to_changeset(value[key], error)} end)
       |> Enum.into(%{})
       |> Map.merge(valid_params)
       |> Map.merge(top_level_errors_for_changes)
@@ -87,13 +87,21 @@ defmodule Datacaster.Executor do
   
     struct(changeset_module(), params) 
   end
-  
+
   def errors_to_changeset(value, error) when is_list(error) do
     error
     |> Enum.map(&errors_to_changeset(value, &1))
   end
 
   def errors_to_changeset(_, error), do: {error, [validation: :invalid]}
+
+  defp to_atom_or_string(key) do
+    try do
+      String.to_existing_atom(key)
+    rescue
+      ArgumentError -> key
+    end
+  end
 
   defp localize_error_message(message, context) do
     context = context.__datacaster__
