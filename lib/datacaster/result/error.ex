@@ -1,5 +1,5 @@
-defmodule Datacaster.Error do
-  defstruct error: nil, context: nil
+defmodule Datacaster.Result.Error do
+  defstruct error: nil, context: nil, error?: true, ok?: false
 
   defmodule List do
     defstruct errors: []
@@ -18,7 +18,7 @@ defmodule Datacaster.Error do
   defmodule Map do
     defstruct errors: %{}
 
-    alias Datacaster.Error
+    alias Datacaster.Result.Error
 
     def new(key, error = %Error{}) do
       %__MODULE__{
@@ -116,7 +116,7 @@ defmodule Datacaster.Error do
     )
   end
 
-  def new(value = %Datacaster.Success{}) do
+  def new(value = %Datacaster.Result.Ok{}) do
     value
   end
 

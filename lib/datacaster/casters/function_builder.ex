@@ -1,7 +1,5 @@
-defmodule Datacaster.Builder do
-  alias Datacaster.Context
-
-  def build_function({op = :fn, fn_meta, fn_args}) do
+defmodule Datacaster.Casters.FunctionBuilder do
+  def lambda_to_func({op = :fn, fn_meta, fn_args}) do
     context_var = {:context, [generated: true], nil}
     input_var = {:input, [generated: true], nil}
 
@@ -23,7 +21,8 @@ defmodule Datacaster.Builder do
         [
           args,
           quote do
-            use Context.CasterHelpers
+            use Datacaster.Context.CasterHelpers
+            use Datacaster.Result
 
             result = unquote(body)
             {result, unquote(context_var)}
@@ -35,7 +34,7 @@ defmodule Datacaster.Builder do
     {op, fn_meta, fn_args}
   end
 
-  def build_function({_op = :&, _meta, _args} = func) do
+  def lambda_to_func({_op = :&, _meta, _args} = func) do
     quote bind_quoted: [func: func] do
       case :erlang.fun_info(func)[:arity] do
         1 ->
