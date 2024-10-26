@@ -1,6 +1,7 @@
 ExUnit.start()
 
 defmodule DatacasterTest do
+  alias Datacaster.Result.Error
   defmacro __using__(_) do
     quote do
       use ExUnit.Case
@@ -45,14 +46,32 @@ defmodule DatacasterTest do
       else
         {val, context} = result
 
-        case val do
-          %Datacaster.Result.Error{} ->
-            %Datacaster.Result.Error{ val | context: nil }
-          _ ->
-            val
-        end
+        clear_context(val)
       end
     end
+  end
+
+  def clear_context(error) do
+    case error do
+      %Error{} ->
+        %Error{ error | context: nil }
+      %Error.Map{errors: errors} ->
+        errors = 
+          errors
+          |> Enum.map(fn {key, error} -> {key, clear_context(error)} end)
+          |> Enum.into(%{})
+
+        %Error.Map{errors: errors}
+      %Error.List{errors: errors} ->
+        errors = Enum.map(errors, fn error -> clear_context(error) end)
+        %Error.List{errors: errors}
+      _ ->
+        error
+    end
+  end
+
+  def error_map(map) do
+    %Error.Map{ errors: map }
   end
 end
 

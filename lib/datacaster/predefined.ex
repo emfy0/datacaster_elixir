@@ -56,6 +56,24 @@ defmodule Datacaster.Predefined do
     |> save_caster!()
   end
 
+  defmacro hash_schema(key_and_casters) do
+    caller = __CALLER__
+
+    quote(do: CasterDefinition.init(
+      Casters.HashSchema, unquote(Macro.escape(caller)), key_and_casters: unquote(key_and_casters)
+    ))
+    |> save_caster!()
+  end
+
+  defmacro pick(keys) do
+    caller = __CALLER__
+
+    quote(do: CasterDefinition.init(
+      Casters.Picker, unquote(Macro.escape(caller)), keys: unquote(keys)
+    ))
+    |> save_caster!()
+  end
+
   defmacro left > right do
     caller = __CALLER__
 
@@ -88,12 +106,6 @@ defmodule Datacaster.Predefined do
     _caster(__CALLER__, lambda)
   end
 
-  defmacro uuid(error_msg \\ "should be a uuid") do
-    lambda = quote do: &String.match?(&1, ~r/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
-
-    _check(__CALLER__, error_msg, lambda)
-  end
-
   defmacro boolean(error_msg \\ "should be a boolean") do
     _check(__CALLER__, error_msg, quote do: &is_boolean/1)
   end
@@ -120,6 +132,14 @@ defmodule Datacaster.Predefined do
 
   defmacro integer(error_msg \\ "should be an integer") do
     _check(__CALLER__, error_msg, quote do: &is_integer/1)
+  end
+
+  defmacro uuid(error_msg \\ "should be a uuid") do
+    lambda = quote do: fn input -> 
+      is_bitstring(input) && String.match?(input, ~r/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+    end
+
+    _check(__CALLER__, error_msg, lambda)
   end
 
   defmacro __before_compile__(_) do

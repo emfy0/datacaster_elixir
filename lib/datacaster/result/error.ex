@@ -2,7 +2,7 @@ defmodule Datacaster.Result.Error do
   defstruct error: nil, context: nil, error?: true, ok?: false
 
   defmodule List do
-    defstruct errors: []
+    defstruct errors: [], error?: true, ok?: false
 
     def from_error(error) do
       %__MODULE__{errors: [error]}
@@ -16,7 +16,7 @@ defmodule Datacaster.Result.Error do
   end
 
   defmodule Map do
-    defstruct errors: %{}
+    defstruct errors: %{}, error?: true, ok?: false
 
     alias Datacaster.Result.Error
 
