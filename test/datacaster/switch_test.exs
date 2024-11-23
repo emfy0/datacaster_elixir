@@ -241,4 +241,32 @@ defmodule Datacaster.SwitchTest do
       assert run_caster("asd") == error("is not a hash")
     end
   end
+
+  describe "it works with else definition" do
+    define_caster do
+      person = hash_schema(
+        kind: compare("person"),
+        username: string()
+      )
+
+      account = hash_schema(
+        kind: compare("account"),
+        legal_name: string()
+      )
+
+      switch(
+        pick(:kind), on: %{ compare("person") => person, compare("account") => account }, else: check("some_custom_error", fn _ -> false end)
+      )
+    end
+
+    test_caster "returns custom failure for non match" do
+      assert run_caster(%{
+        kind: "asd", legal_name: true
+      }) == error("some_custom_error")
+    end
+
+    test_caster "returns failure for non pickable" do
+      assert run_caster("asd") == error("is not a hash")
+    end
+  end
 end

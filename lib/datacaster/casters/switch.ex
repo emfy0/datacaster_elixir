@@ -63,14 +63,13 @@ defmodule Datacaster.Casters.Switch do
           else
             else_statement = unquote(Macro.escape(else_statement))
 
-            case else_statement do
-              else_statement when is_struct(else_statement) ->
-                Kernel.apply(__MODULE__, else_statement.name, [statement_result, statement_context])
-              nil ->
-                {
-                  Datacaster.Result.Error.new("is invalid", Datacaster.Context.put_error(statement_context, input)),
-                  statement_context
-                }
+            if else_statement do
+                Kernel.apply(__MODULE__, else_statement, [statement_result, statement_context])
+            else
+              {
+                Datacaster.Result.Error.new("is invalid", Datacaster.Context.put_error(statement_context, input)),
+                statement_context
+              }
             end
           end
         else
