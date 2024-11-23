@@ -65,6 +65,18 @@ defmodule Datacaster.Predefined do
     |> save_caster!()
   end
 
+  defmacro switch(statement, opts) do
+    caller = __CALLER__
+
+    quote(do: CasterDefinition.init(
+      Casters.Switch, unquote(Macro.escape(caller)),
+      statement: unquote(statement),
+      on_clauses: unquote(opts[:on]),
+      else_statement: unquote(opts[:else])
+    ))
+    |> save_caster!()
+  end
+
   defmacro pick(keys) do
     caller = __CALLER__
 
@@ -137,6 +149,14 @@ defmodule Datacaster.Predefined do
   defmacro uuid(error_msg \\ "should be a uuid") do
     lambda = quote do: fn input -> 
       is_bitstring(input) && String.match?(input, ~r/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+    end
+
+    _check(__CALLER__, error_msg, lambda)
+  end
+
+  defmacro compare(error_msg \\ "is invalid", reference) do
+    lambda = quote do: fn input -> 
+      input == unquote(reference)
     end
 
     _check(__CALLER__, error_msg, lambda)

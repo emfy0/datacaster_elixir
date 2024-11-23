@@ -1,4 +1,4 @@
-defmodule Datacaster.HashSchemaTest do
+defmodule Datacaster.PickerTest do
   use DatacasterTest
 
   describe "it works with lists and integers" do

@@ -22,6 +22,20 @@ defmodule Datacaster.CasterTest do
     end
   end
 
+  describe "#compare" do
+    define_caster do
+      compare("compare")
+    end
+
+    test_caster "return error on non compare" do
+      assert run_caster("unknown") == error("is invalid")
+    end
+
+    test_caster "return success on compare" do
+      assert run_caster("compare") == ok("compare")
+    end
+  end
+
   describe "#to_boolean" do
     define_caster do
       to_boolean()
