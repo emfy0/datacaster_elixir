@@ -1,21 +1,8 @@
 # DatacasterElixir
 
-**TODO: Add description**
+**TODO**
 
-## Installation
+- [] Очищать вложенные определения для кастеров, когда те передаются в функции и там енумеруются, так как там появляются ненужные вложенные данные, когда по факту нужно только название вложенной функции
+- [] убирать абсенты на результурующей структуре (или же рещить вопрос с тем, когда возвращается одиночный абсент)
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `datacaster_elixir` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:datacaster_elixir, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/datacaster_elixir>.
 
